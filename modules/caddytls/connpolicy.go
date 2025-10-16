@@ -35,6 +35,7 @@ import (
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
+	"github.com/caddyserver/caddy/v2/internal/stringsutil"
 )
 
 func init() {
@@ -106,8 +107,9 @@ func (cp ConnectionPolicies) TLSConfig(ctx caddy.Context) *tls.Config {
 			for _, m := range p.matchers {
 				if sni, ok := m.(MatchServerName); ok {
 					for _, sniName := range sni {
+						cleanSNI := stringsutil.TrimFQDNTrailingDot(sniName)
 						// index for fast lookups during handshakes
-						indexedBySNI[sniName] = append(indexedBySNI[sniName], p)
+						indexedBySNI[cleanSNI] = append(indexedBySNI[cleanSNI], p)
 					}
 				}
 			}
@@ -115,6 +117,8 @@ func (cp ConnectionPolicies) TLSConfig(ctx caddy.Context) *tls.Config {
 	}
 
 	getConfigForClient := func(hello *tls.ClientHelloInfo) (*tls.Config, error) {
+		hello.ServerName = stringsutil.TrimFQDNTrailingDot(hello.ServerName)
+
 		// filter policies by SNI first, if possible, to speed things up
 		// when there may be lots of policies
 		possiblePolicies := cp

@@ -39,12 +39,27 @@ func TestHostMatcher(t *testing.T) {
 		expect bool
 	}{
 		{
+			match:  MatchHost{"sub.example.com"},
+			input:  "sub.example.com.",
+			expect: true,
+		},
+		{
 			match:  MatchHost{},
 			input:  "example.com",
 			expect: false,
 		},
 		{
 			match:  MatchHost{"example.com"},
+			input:  "example.com",
+			expect: true,
+		},
+		{
+			match:  MatchHost{"example.com"},
+			input:  "example.com.",
+			expect: true,
+		},
+		{
+			match:  MatchHost{"example.com."},
 			input:  "example.com",
 			expect: true,
 		},
@@ -95,6 +110,16 @@ func TestHostMatcher(t *testing.T) {
 		},
 		{
 			match:  MatchHost{"*.example.com"},
+			input:  "foo.example.com",
+			expect: true,
+		},
+		{
+			match:  MatchHost{"*.example.com"},
+			input:  "foo.example.com.",
+			expect: true,
+		},
+		{
+			match:  MatchHost{"*.example.com."},
 			input:  "foo.example.com",
 			expect: true,
 		},
