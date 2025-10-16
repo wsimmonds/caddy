@@ -34,6 +34,7 @@ import (
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/internal"
+	"github.com/caddyserver/caddy/v2/internal/stringsutil"
 	"github.com/caddyserver/caddy/v2/modules/caddyevents"
 )
 
@@ -226,7 +227,8 @@ func (t *TLS) Provision(ctx caddy.Context) error {
 				}
 				repl := caddy.NewReplacer()
 				for _, sub := range *automateNames {
-					t.automateNames[repl.ReplaceAll(sub, "")] = struct{}{}
+					name := stringsutil.TrimFQDNTrailingDot(repl.ReplaceAll(sub, ""))
+					t.automateNames[name] = struct{}{}
 				}
 			} else {
 				return fmt.Errorf("loading certificates with 'automate' requires array of strings, got: %T", modIface)
@@ -343,6 +345,7 @@ func (t *TLS) Provision(ctx caddy.Context) error {
 
 		// outer names should have certificates to reduce client brittleness
 		for _, outerName := range outerNames {
+			outerName = stringsutil.TrimFQDNTrailingDot(outerName)
 			if outerName == "" {
 				continue
 			}
@@ -633,6 +636,7 @@ func (t *TLS) RegisterServerNames(dnsNames []string) {
 		if err != nil {
 			host = name
 		}
+		host = stringsutil.TrimFQDNTrailingDot(host)
 		if strings.TrimSpace(host) != "" && !certmagic.SubjectIsIP(host) {
 			t.serverNames[strings.ToLower(host)] = struct{}{}
 		}
@@ -741,6 +745,7 @@ func (t *TLS) getConfigForName(name string) *certmagic.Config {
 // default policy is used, depending on whether the name qualifies for a
 // public certificate or not.
 func (t *TLS) getAutomationPolicyForName(name string) *AutomationPolicy {
+	name = stringsutil.TrimFQDNTrailingDot(name)
 	for _, ap := range t.Automation.Policies {
 		if len(ap.subjects) == 0 {
 			return ap // no host filter is an automatic match
@@ -764,6 +769,7 @@ func AllMatchingCertificates(san string) []certmagic.Certificate {
 }
 
 func (t *TLS) HasCertificateForSubject(subject string) bool {
+	subject = stringsutil.TrimFQDNTrailingDot(subject)
 	certCacheMu.RLock()
 	allMatchingCerts := certCache.AllMatchingCertificates(subject)
 	certCacheMu.RUnlock()

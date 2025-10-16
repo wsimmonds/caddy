@@ -37,6 +37,7 @@ import (
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
+	"github.com/caddyserver/caddy/v2/internal/stringsutil"
 )
 
 type (
@@ -262,9 +263,8 @@ func (m MatchHost) Provision(_ caddy.Context) error {
 		if err != nil {
 			return fmt.Errorf("converting hostname '%s' to ASCII: %v", host, err)
 		}
-		if asciiHost != host {
-			m[i] = asciiHost
-		}
+		asciiHost = stringsutil.TrimFQDNTrailingDot(asciiHost)
+		m[i] = asciiHost
 		normalizedHost := strings.ToLower(asciiHost)
 		if firstI, ok := seen[normalizedHost]; ok {
 			return fmt.Errorf("host at index %d is repeated at index %d: %s", firstI, i, host)
@@ -311,6 +311,8 @@ func (m MatchHost) MatchWithError(r *http.Request) (bool, error) {
 		reqHost = strings.TrimSuffix(reqHost, "]")
 	}
 
+	reqHost = stringsutil.TrimFQDNTrailingDot(reqHost)
+
 	if m.large() {
 		// fast path: locate exact match using binary search (about 100-1000x faster for large lists)
 		pos := sort.Search(len(m), func(i int) bool {
@@ -336,7 +338,7 @@ outer:
 			break
 		}
 
-		host = repl.ReplaceAll(host, "")
+		host = stringsutil.TrimFQDNTrailingDot(repl.ReplaceAll(host, ""))
 		if strings.Contains(host, "*") {
 			patternParts := strings.Split(host, ".")
 			incomingParts := strings.Split(reqHost, ".")

@@ -30,7 +30,22 @@ func TestServerNameMatcher(t *testing.T) {
 		expect bool
 	}{
 		{
+			names:  []string{"sub.example.com"},
+			input:  "sub.example.com.",
+			expect: true,
+		},
+		{
 			names:  []string{"example.com"},
+			input:  "example.com",
+			expect: true,
+		},
+		{
+			names:  []string{"example.com"},
+			input:  "example.com.",
+			expect: true,
+		},
+		{
+			names:  []string{"example.com."},
 			input:  "example.com",
 			expect: true,
 		},
@@ -71,6 +86,16 @@ func TestServerNameMatcher(t *testing.T) {
 		},
 		{
 			names:  []string{"*.example.com"},
+			input:  "sub.example.com",
+			expect: true,
+		},
+		{
+			names:  []string{"*.example.com"},
+			input:  "sub.example.com.",
+			expect: true,
+		},
+		{
+			names:  []string{"*.example.com."},
 			input:  "sub.example.com",
 			expect: true,
 		},

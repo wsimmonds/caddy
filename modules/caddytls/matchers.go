@@ -32,6 +32,7 @@ import (
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
 	"github.com/caddyserver/caddy/v2/internal"
+	"github.com/caddyserver/caddy/v2/internal/stringsutil"
 )
 
 func init() {
@@ -69,9 +70,11 @@ func (m MatchServerName) Match(hello *tls.ClientHelloInfo) bool {
 		repl = caddy.NewReplacer()
 	}
 
+	serverName := stringsutil.TrimFQDNTrailingDot(hello.ServerName)
+
 	for _, name := range m {
-		rs := repl.ReplaceAll(name, "")
-		if certmagic.MatchWildcard(hello.ServerName, rs) {
+		rs := stringsutil.TrimFQDNTrailingDot(repl.ReplaceAll(name, ""))
+		if certmagic.MatchWildcard(serverName, rs) {
 			return true
 		}
 	}

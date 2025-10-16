@@ -31,6 +31,7 @@ import (
 	"golang.org/x/net/idna"
 
 	"github.com/caddyserver/caddy/v2"
+	"github.com/caddyserver/caddy/v2/internal/stringsutil"
 )
 
 // AutomationConfig governs the automated management of TLS certificates.
@@ -189,7 +190,7 @@ func (ap *AutomationPolicy) Provision(tlsApp *TLS) error {
 		if err != nil {
 			return fmt.Errorf("could not convert automation policy subject '%s' to punycode: %v", sub, err)
 		}
-		subjects[i] = subASCII
+		subjects[i] = stringsutil.TrimFQDNTrailingDot(subASCII)
 	}
 	ap.subjects = subjects
 
